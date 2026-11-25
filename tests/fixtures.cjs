@@ -1,0 +1,40 @@
+const products = [
+  {
+    _id: "650000000000000000000001",
+    title: "Blue Check Shirt",
+    brand: "Clothify",
+    category: "Shirts",
+    description: "A blue and black cotton check shirt.",
+    price: 39,
+    rating: 4.8,
+    images: ["/catalog/check-shirt.webp"],
+    quantity: 20,
+    size: "M",
+  },
+  {
+    _id: "650000000000000000000002",
+    title: "Black Graphic T-shirt",
+    brand: "Aorus",
+    category: "T-shirts",
+    description: "A black cotton graphic tee.",
+    price: 25,
+    rating: 4.5,
+    images: ["/catalog/tshirt.webp"],
+    quantity: 20,
+    size: "L",
+  },
+  {
+    _id: "650000000000000000000003",
+    title: "Red High-top Sneakers",
+    brand: "Nike",
+    category: "Shoes",
+    description: "Red and black high-top sneakers.",
+    price: 89,
+    rating: 4.9,
+    images: ["/catalog/sneakers.webp"],
+    quantity: 20,
+    size: "42",
+  },
+];
+
+module.exports = { products };
