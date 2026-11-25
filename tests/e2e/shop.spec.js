@@ -107,7 +107,7 @@ test("UI-05 Place an order and display the saved details", async ({ page, reques
   await expect(page.getByText(shirt.title, { exact: true })).toBeVisible();
   await expect(page.getByText("Quantity: 2")).toBeVisible();
   await expect(page.getByText("Total Price: ₹78")).toBeVisible();
-  await testInfo.attach("order-confirmation", { body: await page.screenshot(), contentType: "image/png" });
+  await testInfo.attach("order-confirmation", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 });
 
 test("UI-06 Logout protects the cart again", async ({ page, registeredBuyer }) => {
