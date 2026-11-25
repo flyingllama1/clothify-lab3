@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+coverage/
+playwright-report/
+test-results/
+audit-reports/
+integration.xml
+unit.xml
+release/

@@ -1,0 +1,15 @@
+{
+  "all": true,
+  "include": [
+    "backend/app.js",
+    "backend/controller/**/*.js",
+    "backend/middleware/**/*.js",
+    "backend/models/**/*.js",
+    "backend/routes/**/*.js",
+    "frontend/src/domain/**/*.ts"
+  ],
+  "exclude": ["**/node_modules/**"],
+  "reporter": ["text", "html", "lcov", "json-summary"],
+  "check-coverage": true,
+  "lines": 80
+}

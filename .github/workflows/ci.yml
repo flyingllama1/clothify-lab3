@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci
+      - run: npm --prefix backend ci
+      - run: npm --prefix frontend ci
+      - name: ESLint
+        run: npm run lint
+      - name: Unit tests and line coverage (minimum 80%)
+        run: npm run test:unit
+      - name: Upload unit and coverage reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-and-coverage
+          path: |
+            unit.xml
+            coverage/
+          if-no-files-found: warn
+
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Audit all lockfiles (block critical)
+        run: npm run security
+      - name: Upload npm audit reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit
+          path: audit-reports/
+          if-no-files-found: warn
+
+  integration:
+    needs: [unit, security]
+    runs-on: ubuntu-24.04
+    services:
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'"
+          --health-interval 5s
+          --health-timeout 4s
+          --health-retries 20
+    env:
+      MONGO_URI: mongodb://127.0.0.1:27017/clothify_integration
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm --prefix backend ci
+      - name: API and MongoDB integration tests
+        run: npm run test:integration
+      - name: Upload integration report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-junit
+          path: integration.xml
+          if-no-files-found: warn
+
+  e2e:
+    needs: integration
+    runs-on: ubuntu-24.04
+    services:
+      mongo:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'"
+          --health-interval 5s
+          --health-timeout 4s
+          --health-retries 20
+    env:
+      MONGO_URI: mongodb://127.0.0.1:27017/clothify_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci
+      - run: npm --prefix backend ci
+      - run: npm --prefix frontend ci
+      - run: npx playwright install --with-deps chromium
+      - name: Playwright end-to-end tests
+        run: npm run test:e2e
+      - name: Upload Playwright reports and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+
+  build:
+    needs: e2e
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm --prefix frontend ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: release/public/
+      - name: Package release
+        run: |
+          tar --exclude=node_modules --exclude='.env*' --exclude=tests --exclude=.gitignore --exclude=vercel.json -cf /tmp/clothify-backend.tar backend
+          tar -xf /tmp/clothify-backend.tar -C release
+          tar -czf clothify-release.tar.gz -C release backend public
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clothify-release
+          path: clothify-release.tar.gz
+          if-no-files-found: error
