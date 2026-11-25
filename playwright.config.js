@@ -7,7 +7,7 @@ module.exports = defineConfig({
   workers: 2,
   reporter: [
     ["list"],
-    ["html", { open: "never" }],
+    ["html", { open: "never", noCopyPrompt: true }],
     ["junit", { outputFile: "test-results/playwright.xml" }],
   ],
   use: {
