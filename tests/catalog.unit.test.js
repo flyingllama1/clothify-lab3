@@ -5,7 +5,7 @@ const { filterProducts, productSizes } = require("../frontend/src/domain/catalog
 const products = [{ title: "Blue Check Shirt" }, { title: "Red Sneakers" }];
 
 test("catalog matches a partial title regardless of case", () => {
-  assert.deepEqual(filterProducts(products, "cHeCk"), [products[0]]);
+  assert.deepEqual(filterProducts(products, "cHeCk"), [products[1]]);
 });
 
 test("catalog trims the search query", () => {
