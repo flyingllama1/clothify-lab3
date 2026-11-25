@@ -6,16 +6,17 @@ const { products } = require("../fixtures.cjs");
 const apiURL = "http://127.0.0.1:3001/api";
 const shirt = products[0];
 
+function newBuyer() {
+  return {
+    fullName: "Test Buyer",
+    email: `buyer-${randomUUID()}@example.test`,
+    password: "ExamplePass123",
+  };
+}
+
 const test = base.extend({
-  buyer: async ({}, use) => {
-    // Each test gets its own account and browser context.
-    await use({
-      fullName: "Test Buyer",
-      email: `buyer-${randomUUID()}@example.test`,
-      password: "ExamplePass123",
-    });
-  },
-  registeredBuyer: async ({ request, buyer }, use) => {
+  registeredBuyer: async ({ request }, use) => {
+    const buyer = newBuyer();
     const response = await request.post(`${apiURL}/users/register`, { data: buyer });
     expect(response.status()).toBe(200);
     await use(buyer);
@@ -29,11 +30,11 @@ async function signIn(page, buyer) {
   return auth;
 }
 
-test("UI-01 Registration", async ({ page, buyer }) => {
+test("UI-01 Registration", async ({ page }) => {
   const auth = new AuthPage(page);
   const registration = page.waitForResponse((response) =>
     response.url().endsWith("/api/users/register") && response.request().method() === "POST");
-  await auth.register(buyer);
+  await auth.register(newBuyer());
   expect((await registration).status()).toBe(200);
   await expect(page.getByText("Signup successful")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
