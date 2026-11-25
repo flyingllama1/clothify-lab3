@@ -7,14 +7,13 @@ const apiURL = "http://127.0.0.1:3001/api";
 const shirt = products[0];
 
 const test = base.extend({
-  buyer: async ({ page }, use) => {
+  buyer: async ({}, use) => {
     // Each test gets its own account and browser context.
     await use({
       fullName: "Test Buyer",
       email: `buyer-${randomUUID()}@example.test`,
       password: "ExamplePass123",
     });
-    await page.context().clearCookies();
   },
   registeredBuyer: async ({ request, buyer }, use) => {
     const response = await request.post(`${apiURL}/users/register`, { data: buyer });

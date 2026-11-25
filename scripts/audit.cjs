@@ -5,8 +5,8 @@ mkdirSync("audit-reports", { recursive: true });
 
 for (const [name, folder] of [["root", "."], ["backend", "backend"], ["frontend", "frontend"]]) {
   const result = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm",
-    ["audit", "--audit-level=critical", "--json"],
-    { cwd: folder, encoding: "utf8", shell: process.platform === "win32" });
+    ["--prefix", folder, "audit", "--audit-level=critical", "--json"],
+    { encoding: "utf8", shell: process.platform === "win32" });
   writeFileSync(`audit-reports/${name}.json`, result.stdout ?? "");
 
   if (result.error || result.stderr) {
@@ -16,7 +16,7 @@ for (const [name, folder] of [["root", "."], ["backend", "backend"], ["frontend"
   try {
     const { metadata, error } = JSON.parse(result.stdout);
     if (error || !metadata?.vulnerabilities) {
-      throw new Error(error?.summary ?? "Missing vulnerability counts");
+      throw new Error(error?.summary || error?.detail || "Missing vulnerability counts");
     }
     const { critical, high, moderate, low } = metadata.vulnerabilities;
     console.log(`${name}: critical=${critical}, high=${high}, moderate=${moderate}, low=${low}`);
